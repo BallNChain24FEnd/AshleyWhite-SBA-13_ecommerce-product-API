@@ -69,11 +69,9 @@ routes.post("/", async (req, res) => {
         // Create and save the product
         const response = await Product.create(req.body);
 
-        // Return the newly created product
         res.status(201).json(response);
 
     } catch (err) {
-        // Display the error in the terminal
         console.error("Product Creation Error:", err.message);
 
         // Handle validation errors
@@ -83,9 +81,97 @@ routes.post("/", async (req, res) => {
             });
         }
 
-        // Handle unexpected errors
         res.status(500).json({
             message: "Error creating product"
+        });
+    }
+});
+
+/*
+    ========== Put Routes ==========
+*/
+
+// Update a product by ID
+routes.put("/:id", async (req, res) => {
+    try {
+        // Update and return the product
+        const response = await Product.findByIdAndUpdate(
+            req.params.id,
+            req.body,
+            {
+                new: true,
+                runValidators: true
+            }
+        );
+
+        // Check if the product exists
+        if (!response) {
+            return res.status(404).json({
+                message: "Product not found"
+            });
+        }
+
+        res.status(200).json(response);
+
+    } catch (err) {
+        console.error("Update Product Error:", err.message);
+
+        // Handle validation errors
+        if (err.name === "ValidationError") {
+            return res.status(400).json({
+                message: err.message
+            });
+        }
+
+        // Handle invalid product IDs
+        if (err.name === "CastError") {
+            return res.status(400).json({
+                message: "Invalid product ID"
+            });
+        }
+
+        res.status(500).json({
+            message: "Error updating product"
+        });
+    }
+});
+
+/*
+    ========== Delete Routes ==========
+*/
+
+// Delete a product by ID
+routes.delete("/:id", async (req, res) => {
+    try {
+        // Find and delete the product
+        const response = await Product.findByIdAndDelete(
+            req.params.id
+        );
+
+        // Check if the product exists
+        if (!response) {
+            return res.status(404).json({
+                message: "Product not found"
+            });
+        }
+
+        // Confirm successful deletion
+        res.status(200).json({
+            message: "Product deleted successfully"
+        });
+
+    } catch (err) {
+        console.error("Delete Product Error:", err.message);
+
+        // Handle invalid product IDs
+        if (err.name === "CastError") {
+            return res.status(400).json({
+                message: "Invalid product ID"
+            });
+        }
+
+        res.status(500).json({
+            message: "Error deleting product"
         });
     }
 });
