@@ -4,6 +4,9 @@ import 'dotenv/config';
 // Import Express
 import express from 'express';
 
+// Import our database connection
+import connectDB from './config/connection.js';
+
 // Initialize our Express app
 const app = express();
 
@@ -20,7 +23,9 @@ app.get("/", (req, res) => {
     });
 });
 
-// Start the Express server
-app.listen(port, () => {
-    console.log('Server running on port: http://localhost:' + port);
+// Connect to MongoDB before starting the server
+connectDB().then(() => {
+    app.listen(port, () => {
+        console.log('Server running on port: http://localhost:' + port);
+    });
 });
