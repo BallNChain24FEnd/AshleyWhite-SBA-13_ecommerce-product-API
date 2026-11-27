@@ -7,6 +7,9 @@ import express from 'express';
 // Import our database connection
 import connectDB from './config/connection.js';
 
+// Import our product routes
+import productRouter from './routes/productRoutes.js';
+
 // Initialize our Express app
 const app = express();
 
@@ -22,6 +25,9 @@ app.get("/", (req, res) => {
         message: "Welcome to the Zenith Product API!"
     });
 });
+
+// Add our product routes
+app.use("/api/products", productRouter);
 
 // Connect to MongoDB before starting the server
 connectDB().then(() => {
