@@ -11,11 +11,18 @@ const routes = Router();
     ========== Get Routes ==========
 */
 
-// Get all products with optional filters
+// Get all products with advanced querying
 routes.get("/", async (req, res) => {
     try {
         // Extract query parameters
-        const { category, minPrice, maxPrice } = req.query;
+        const {
+            category,
+            minPrice,
+            maxPrice,
+            sortBy,
+            page = 1,
+            limit = 10
+        } = req.query;
 
         // Create an empty filter object
         const filter = {};
@@ -40,8 +47,43 @@ routes.get("/", async (req, res) => {
             filter.price.$lte = Number(maxPrice);
         }
 
-        // Find products matching the filters
-        const response = await Product.find(filter);
+        // Create a sorting object
+        const sort = {};
+
+        // Sort from lowest to highest price
+        if (sortBy === "price_asc") {
+            sort.price = 1;
+        }
+
+        // Sort from highest to lowest price
+        if (sortBy === "price_desc") {
+            sort.price = -1;
+        }
+
+        // Convert pagination values to numbers
+        const pageNumber = Number(page);
+        const limitNumber = Number(limit);
+
+        // Validate pagination values
+        if (
+            !Number.isInteger(pageNumber) ||
+            !Number.isInteger(limitNumber) ||
+            pageNumber < 1 ||
+            limitNumber < 1
+        ) {
+            return res.status(400).json({
+                message: "Page and limit must be positive integers"
+            });
+        }
+
+        // Calculate the number of products to skip
+        const skip = (pageNumber - 1) * limitNumber;
+
+        // Find, sort and paginate matching products
+        const response = await Product.find(filter)
+            .sort(sort)
+            .skip(skip)
+            .limit(limitNumber);
 
         res.status(200).json(response);
 
