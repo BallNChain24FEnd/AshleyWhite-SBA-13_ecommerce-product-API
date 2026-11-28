@@ -11,16 +11,49 @@ const routes = Router();
     ========== Get Routes ==========
 */
 
-// Get all products
+// Get all products with optional filters
 routes.get("/", async (req, res) => {
     try {
-        // Find all products
-        const response = await Product.find();
+        // Extract query parameters
+        const { category, minPrice, maxPrice } = req.query;
+
+        // Create an empty filter object
+        const filter = {};
+
+        // Filter by category
+        if (category) {
+            filter.category = category;
+        }
+
+        // Create a price filter
+        if (minPrice !== undefined || maxPrice !== undefined) {
+            filter.price = {};
+        }
+
+        // Filter by minimum price
+        if (minPrice !== undefined) {
+            filter.price.$gte = Number(minPrice);
+        }
+
+        // Filter by maximum price
+        if (maxPrice !== undefined) {
+            filter.price.$lte = Number(maxPrice);
+        }
+
+        // Find products matching the filters
+        const response = await Product.find(filter);
 
         res.status(200).json(response);
 
     } catch (err) {
         console.error("Get Products Error:", err.message);
+
+        // Handle invalid filter values
+        if (err.name === "CastError") {
+            return res.status(400).json({
+                message: "Invalid filter value"
+            });
+        }
 
         res.status(500).json({
             message: "Error retrieving products"
